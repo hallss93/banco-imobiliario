@@ -1,18 +1,21 @@
-const { OPENING_BALANCE, PROPERTIES } = require("./../../utils/constants");
+require("dotenv").config();
+const {
+  PROPERTIES,
+  players,
+  OPENING_BALANCE,
+} = require("./../../utils/constants");
 const random = require("./../../utils/random");
 
-/**
- * Cada Jogador recebe o saldo inicial
- *  */
-const players = [
-  { order: 0, position: 0, name: "impulsive", balance: OPENING_BALANCE },
-  { order: 1, position: 0, name: "demanding", balance: OPENING_BALANCE },
-  { order: 2, position: 0, name: "cautious", balance: OPENING_BALANCE },
-  { order: 3, position: 0, name: "randomer", balance: OPENING_BALANCE },
-];
-
-const gameOver = (players) => {
+const gameOver = () => {
   return players.filter((p) => p.balance > 0).length === 1;
+};
+
+const restartGame = () => {
+  return players.map((p) => {
+    p.balance = OPENING_BALANCE;
+    p.position = 0;
+    return p;
+  });
 };
 
 /**
@@ -20,7 +23,7 @@ const gameOver = (players) => {
  * saldo sobrando depois de realizada a compra.
  */
 const cautiousMode = (playerIndex, toAdvance) => {
-  const propertyIndex = advance(toAdvance);
+  const propertyIndex = advance(playerIndex, toAdvance);
   const player = players[playerIndex];
   if (player.balance >= 80) {
     buyOrRent(playerIndex, propertyIndex);
@@ -31,7 +34,7 @@ const cautiousMode = (playerIndex, toAdvance) => {
  * Compra a propriedade que ele parar em cima com probabilidade de 50%
  */
 const randomerMode = (playerIndex, toAdvance) => {
-  const propertyIndex = advance(toAdvance);
+  const propertyIndex = advance(playerIndex, toAdvance);
   if (random(0, 1) === 0) {
     buyOrRent(playerIndex, propertyIndex);
   }
@@ -42,7 +45,7 @@ const randomerMode = (playerIndex, toAdvance) => {
  * dela seja maior do que 50.
  */
 const demandingMode = (playerIndex, toAdvance) => {
-  const propertyIndex = advance(toAdvance);
+  const propertyIndex = advance(playerIndex, toAdvance);
   const property = PROPERTIES[propertyIndex];
   if (property.rentValue > 50) {
     buyOrRent(playerIndex, propertyIndex);
@@ -53,7 +56,7 @@ const demandingMode = (playerIndex, toAdvance) => {
  * Compra qualquer propriedade sobre a qual ele parar
  */
 const impulsiveMode = (playerIndex, toAdvance) => {
-  const propertyIndex = advance(toAdvance);
+  const propertyIndex = advance(playerIndex, toAdvance);
   buyOrRent(playerIndex, propertyIndex);
 };
 
@@ -64,9 +67,14 @@ const advance = (playerIndex, toAdvance) => {
   const player = players[playerIndex];
 
   if (player.position + toAdvance <= PROPERTIES.length - 1) {
-    players[playerIndex].position = player.position + toAdvance;
-    return players[playerIndex].position;
+    player.position = player.position + toAdvance;
+    return player.position;
   } else {
+    /**
+     * Ao completar uma volta no tabuleiro, o jogador ganha 100 de saldo
+     */
+    player.position = player.position + toAdvance - (PROPERTIES.length - 1);
+    player.balance = player.balance + 100;
     return 0;
   }
 };
@@ -78,7 +86,7 @@ const buyOrRent = (playerIndex, propertyIndex) => {
   // Compra ou aluga o imóvel;
   if (property.owner) {
     if (player.balance >= property.rentValue) {
-      owner = players[property.owner].balance = property.rentValue;
+      players[property.owner].balance = property.rentValue;
       player.balance = player.balance - property.rentValue;
     }
   } else {
@@ -87,19 +95,25 @@ const buyOrRent = (playerIndex, propertyIndex) => {
       player.balance = player.balance - property.saleValue;
     }
   }
+  if (player.balance <= 0) {
+    player.gameOver = true;
+  }
 };
 module.exports = {
   simulate: () => {
+    restartGame();
     // Ordena os jogadores
     players.sort((a, b) => a.order - b.order);
 
-    /**
+    /* *
      * Cada Propriedade recebe um valor de venda e aluguel aleatório
      *  */
-    /* PROPERTIES.map((prop) => {
-      prop.saleValue = random(1, OPENING_BALANCE / 2);
-      prop.rentValue = random(1, OPENING_BALANCE / 4);
-    }); */
+    if (process.env.PROPERTY_VALUE_RANDOM === "true") {
+      PROPERTIES.map((prop) => {
+        prop.saleValue = random(1, OPENING_BALANCE / 2);
+        prop.rentValue = random(1, OPENING_BALANCE / 4);
+      });
+    }
 
     let plays = 0;
     let playsTotal = 0;
@@ -109,6 +123,7 @@ module.exports = {
       const toAdvance = random();
 
       const player = players[playerIndex];
+
       switch (player.name) {
         case "impulsive": {
           impulsiveMode(playerIndex, toAdvance);
@@ -140,10 +155,16 @@ module.exports = {
         plays = 1000;
       }
     }
+    const playersNames = [];
+    players
+      .sort((a, b) => b.balance - a.balance)
+      .map((e) => {
+        playersNames.push(e.name);
+      });
+
     return {
-      playsTotal,
-      players,
-      PROPERTIES,
+      vencedor: players.sort((a, b) => b.balance - a.balance)[0].name,
+      jogadores: playersNames,
     };
   },
 };
