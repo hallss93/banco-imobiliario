@@ -1,5 +1,9 @@
 const { OPENING_BALANCE, PROPERTIES } = require("./../../utils/constants");
 const random = require("./../../utils/random");
+
+const gameOver = (players) => {
+  return players.filter((p) => p.balance > 0).length === 1;
+};
 module.exports = {
   simulate: () => {
     /**
@@ -20,7 +24,24 @@ module.exports = {
       { name: "randomer", balance: OPENING_BALANCE },
     ];
 
-    // Quantidade de casas para avançar aleatória simulando o DADO de 6 lados
-    const toAdvance = random();
+    const plays = 0;
+    const playerIndex = 0;
+    while (plays < 1000) {
+      // Quantidade de casas para avançar aleatória simulando o DADO de 6 lados
+      const toAdvance = random();
+
+      plays++;
+      playerIndex++;
+
+      // Zera o index do array de jogadores para recomeçar pela ordem;
+      if (playerIndex > 3) {
+        playerIndex = 0;
+      }
+
+      // Se restar somente um jogador finaliza o jogo
+      if (gameOver(players)) {
+        plays = 1000;
+      }
+    }
   },
 };
