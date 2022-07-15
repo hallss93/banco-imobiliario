@@ -19,7 +19,8 @@ const gameOver = (players) => {
  * Compra a qualquer propriedade desde que ele tenha uma reserva de 80
  * saldo sobrando depois de realizada a compra.
  */
-const cautiousMode = (playerIndex, propertyIndex) => {
+const cautiousMode = (playerIndex, toAdvance) => {
+  const propertyIndex = advance(toAdvance);
   const player = players[playerIndex];
   if (player.balance >= 80) {
     buyOrRent(playerIndex, propertyIndex);
@@ -29,7 +30,8 @@ const cautiousMode = (playerIndex, propertyIndex) => {
 /**
  * Compra a propriedade que ele parar em cima com probabilidade de 50%
  */
-const randomerMode = (playerIndex, propertyIndex) => {
+const randomerMode = (playerIndex, toAdvance) => {
+  const propertyIndex = advance(toAdvance);
   if (random(0, 1) === 0) {
     buyOrRent(playerIndex, propertyIndex);
   }
@@ -39,7 +41,8 @@ const randomerMode = (playerIndex, propertyIndex) => {
  * Compra a qualquer propriedade, desde que o valor do aluguel
  * dela seja maior do que 50.
  */
-const demandingMode = (playerIndex, propertyIndex) => {
+const demandingMode = (playerIndex, toAdvance) => {
+  const propertyIndex = advance(toAdvance);
   const property = PROPERTIES[propertyIndex];
   if (property.rentValue > 50) {
     buyOrRent(playerIndex, propertyIndex);
@@ -49,8 +52,23 @@ const demandingMode = (playerIndex, propertyIndex) => {
 /**
  * Compra qualquer propriedade sobre a qual ele parar
  */
-const impulsiveMode = (playerIndex, propertyIndex) => {
+const impulsiveMode = (playerIndex, toAdvance) => {
+  const propertyIndex = advance(toAdvance);
   buyOrRent(playerIndex, propertyIndex);
+};
+
+/**
+ * Avança casas
+ */
+const advance = (playerIndex, toAdvance) => {
+  const player = players[playerIndex];
+
+  if (player.position + toAdvance <= PROPERTIES.length - 1) {
+    players[playerIndex].position = player.position + toAdvance;
+    return players[playerIndex].position;
+  } else {
+    return 0;
+  }
 };
 
 const buyOrRent = (playerIndex, propertyIndex) => {
@@ -91,7 +109,6 @@ module.exports = {
       const toAdvance = random();
 
       const player = players[playerIndex];
-
       switch (player.name) {
         case "impulsive": {
           impulsiveMode(playerIndex, toAdvance);
