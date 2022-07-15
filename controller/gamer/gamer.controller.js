@@ -18,10 +18,10 @@ module.exports = {
      * Cada Jogador recebe o saldo inicial
      *  */
     const players = [
-      { name: "impulsive", balance: OPENING_BALANCE },
-      { name: "demanding", balance: OPENING_BALANCE },
-      { name: "cautious", balance: OPENING_BALANCE },
-      { name: "randomer", balance: OPENING_BALANCE },
+      { order: 0, name: "impulsive", balance: OPENING_BALANCE },
+      { order: 1, name: "demanding", balance: OPENING_BALANCE },
+      { order: 2, name: "cautious", balance: OPENING_BALANCE },
+      { order: 3, name: "randomer", balance: OPENING_BALANCE },
     ];
 
     const plays = 0;
@@ -32,6 +32,8 @@ module.exports = {
 
       plays++;
       playerIndex++;
+
+      const player = players[playerIndex];
 
       // Zera o index do array de jogadores para recomeçar pela ordem;
       if (playerIndex > 3) {
