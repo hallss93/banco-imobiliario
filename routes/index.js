@@ -1,8 +1,10 @@
-var express = require('express');
+var express = require("express");
+const { simulate } = require("../controller/gamer/gamer.controller");
 var router = express.Router();
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get("/", function (req, res, next) {
+  simulate();
 });
 
 module.exports = router;
